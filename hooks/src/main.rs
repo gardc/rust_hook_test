@@ -3,7 +3,7 @@ extern crate rand;
 
 use detour::static_detour;
 use rand::Rng;
-use std::io::{stdin, stdout, Read, Write};
+use std::io::stdin;
 
 // fn pause() {
 //     let mut stdout = stdout();
@@ -30,28 +30,61 @@ fn modified_random_number() -> i8 {
     69
 }
 
-fn hook_function() {
+fn initialize_hook() {
     unsafe {
-        Random_number_detour.initialize(random_number, modified_random_number).unwrap();
-        Random_number_detour.enable().unwrap();
-    };
+        Random_number_detour
+            .initialize(random_number, modified_random_number)
+            .unwrap();
+    }
 }
 
-fn hook_function_disable() {
-    unsafe { Random_number_detour.disable().unwrap() };
+fn hook_function(hooked: &mut bool, initialized: &mut bool) {
+    match *hooked {
+        true => {
+            println!("Already hooked!");
+            println!("");
+        }
+        false => {
+            if *initialized == false {
+                initialize_hook();
+                *initialized = true;
+            }
+            unsafe { Random_number_detour.enable().unwrap() };
+            *hooked = true;
+        }
+    }
+}
+
+fn hook_function_disable(hooked: &mut bool) {
+    match *hooked {
+        false => {
+            print!("Hook is already disabled!");
+            println!("");
+        }
+        true => {
+            unsafe { Random_number_detour.disable().unwrap() };
+            *hooked = false;
+        }
+    }
 }
 
 fn main() {
+    let mut initialized: bool = false;
+    let mut hooked: bool = false;
+
     loop {
         println!(" Press 1 to generate new number, 2 to hook function, 3 to disable hook.");
         let mut input_string = String::new();
         stdin().read_line(&mut input_string).unwrap();
-        let input = input_string.trim().parse().expect("Please enter a number between 1-3.");
+        let input = input_string
+            .trim()
+            .parse()
+            .expect("Please enter a number between 1-3.");
 
         match input {
             1 => print_random_number(),
-            2 => hook_function(),
-            3 => hook_function_disable(),
+            2 => hook_function(&mut hooked, &mut initialized),
+            3 => hook_function_disable(&mut hooked),
             _ => println!("Please enter a number between 1-3."),
         }
         // pause();
