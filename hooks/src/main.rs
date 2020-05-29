@@ -76,10 +76,12 @@ fn main() {
         println!(" Press 1 to generate new number, 2 to hook function, 3 to disable hook.");
         let mut input_string = String::new();
         stdin().read_line(&mut input_string).unwrap();
-        let input = input_string
-            .trim()
-            .parse()
-            .expect("Please enter a number between 1-3.");
+        input_string = input_string.trim().to_string();
+        if input_string.chars().all(char::is_numeric) == false {
+            println!("Please enter a number between 1-3.");
+            continue;
+        }
+        let input: u8 = input_string.parse().unwrap();
 
         match input {
             1 => print_random_number(),
